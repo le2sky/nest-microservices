@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
     MailerModule.forRoot({
@@ -11,6 +12,9 @@ import { MailerModule } from '@nestjs-modules/mailer';
       defaults: {
         from: 'no-reply@example.com',
       },
+    }),
+    ConfigModule.forRoot({
+      isGlobal: true,
     }),
   ],
   controllers: [AppController],

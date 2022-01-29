@@ -11,7 +11,12 @@ import { ProductModule } from '../product/product.module';
 import { StripeModule } from 'nestjs-stripe';
 import { ConfigService } from '@nestjs/config';
 import { OrderListener } from './listeners/order.listener';
-import { MailerModule } from '@nestjs-modules/mailer';
+import {
+  ClientProvider,
+  ClientsModule,
+  ClientsModuleAsyncOptions,
+  Transport,
+} from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -26,15 +31,30 @@ import { MailerModule } from '@nestjs-modules/mailer';
         apiVersion: '2020-08-27',
       }),
     }),
-    MailerModule.forRoot({
-      transport: {
-        host: 'docker.for.mac.localhost',
-        port: 1025,
+    ClientsModule.registerAsync([
+      {
+        name: 'KAFKA_SERVICE',
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => {
+          const options: ClientProvider = {
+            transport: Transport.KAFKA,
+            options: {
+              client: {
+                brokers: [configService.get('CONFLUENT_CLUSTER_SERVER')],
+                ssl: true,
+                sasl: {
+                  mechanism: 'plain',
+                  username: configService.get('CONFLUENT_API_KEY'),
+                  password: configService.get('CONFLUENT_SECRET_KEY'),
+                },
+              },
+            },
+          };
+
+          return options;
+        },
       },
-      defaults: {
-        from: 'no-reply@example.com',
-      },
-    }),
+    ] as ClientsModuleAsyncOptions),
   ],
   controllers: [OrderController],
   providers: [OrderService, OrderItemService, OrderListener],
