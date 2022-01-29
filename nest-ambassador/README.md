@@ -8,6 +8,13 @@ nest-microservices practice
 $ npm install
 ```
 
+## Configuration
+
+```bash
+CHECKOUT_URL=<checkout frontend url>
+STRIPE_KEY=<input your stripe key>
+```
+
 ## Running the app
 
 ```bash
