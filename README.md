@@ -1,18 +1,25 @@
-## Description
+## nest-microservices practice
 
-nest-microservices practice
+<img src="./kafkaCluster.png"></img>
 
 ## Installation
 
 ```bash
-$ npm install
+1. npm install (for each microservices)
+2. docker-compose up (for each microservices)
 ```
 
 ## Configuration
 
 ```bash
+--nest-ambassador service
 CHECKOUT_URL=<checkout frontend url>
 STRIPE_KEY=<input your stripe key>
+
+--microservices common
+CONFLUENT_CLUSTER_SERVER=<input your apache kafka cluster url>
+CONFLUENT_API_KEY=<input your api_key>
+CONFLUENT_SECRET_KEY=<input your secret_key>
 ```
 
 ## Running the app
