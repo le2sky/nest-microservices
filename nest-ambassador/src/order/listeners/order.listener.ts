@@ -17,6 +17,13 @@ export class OrderListener {
     client.zincrby('rankings', order.ambassador_revenue, order.user.name);
     //message 발행(topic,data)
 
-    await this.clientKafka.emit('default', order);
+    await this.clientKafka.emit(
+      'default',
+      JSON.stringify({
+        ...order,
+        total: order.total,
+        ambassador_revenue: order.ambassador_revenue,
+      }),
+    );
   }
 }
