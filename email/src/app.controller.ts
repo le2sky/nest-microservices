@@ -1,5 +1,5 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Logger } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { KafkaMessage } from 'kafkajs';
 @Controller()
@@ -8,9 +8,8 @@ export class AppController {
 
   // 특정 토픽을 구독한다.
   @MessagePattern('default')
-  async order_complated(@Payload() message: KafkaMessage) {
+  async orderComplated(@Payload() message: KafkaMessage) {
     console.log(message);
-
     //   await this.mailerService.sendMail({
     //     to: 'admin@admin.com',
     //     subject: 'An order has been completed',
