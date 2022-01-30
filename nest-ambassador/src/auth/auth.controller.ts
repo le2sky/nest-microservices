@@ -48,28 +48,16 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Req() request: Request,
   ) {
-    const user = await this.userService.findOne({ email });
+    const resp = await axios.post(
+      'http://host.docker.internal:8001/api/login',
+      {
+        email,
+        password,
+        scope: request.path === '/api/admin/login' ? 'admin' : 'ambassador',
+      },
+    );
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (!(await bcrypt.compare(password, user.password))) {
-      throw new BadRequestException('Invalid credentials');
-    }
-
-    const adminLogin = request.path === '/api/admin/login';
-
-    if (user.is_ambassador && adminLogin) {
-      throw new UnauthorizedException();
-    }
-
-    const jwt = await this.jwtService.signAsync({
-      id: user.id,
-      scope: adminLogin ? 'admin' : 'ambassador',
-    });
-
-    response.cookie('jwt', jwt, { httpOnly: true });
+    response.cookie('jwt', resp.data['jwt'], { httpOnly: true });
 
     return {
       message: 'success',
