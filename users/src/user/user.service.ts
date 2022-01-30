@@ -13,7 +13,11 @@ export class UserService {
     return await this.userRepository.save(options);
   }
 
-  async find() {
+  async find(options: {} = {}) {
     return await this.userRepository.find();
+  }
+
+  async findOne(options) {
+    return await this.userRepository.findOne(options)
   }
 }

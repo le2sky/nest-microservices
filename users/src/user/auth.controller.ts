@@ -18,11 +18,15 @@ import * as bcrypt from 'bcryptjs';
 import { Response, Request } from 'express';
 //import { AuthGuard } from './auth.guard';
 import { UserService } from './user.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller()
 @UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private jwtService: JwtService,
+  ) {}
 
   @Post('register')
   async register(@Body() body: RegisterDto, @Req() request: Request) {
@@ -39,40 +43,32 @@ export class AuthController {
     });
   }
 
-  //   @Post(['admin/login', 'ambassador/login'])
-  //   async login(
-  //     @Body('email') email: string,
-  //     @Body('password') password: string,
-  //     @Res({ passthrough: true }) response: Response,
-  //     @Req() request: Request,
-  //   ) {
-  //     const user = await this.userService.findOne({ email });
+  @Post('login')
+  async login(
+    @Body('email') email: string,
+    @Body('password') password: string,
+    @Body('scope') scope: string,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const user = await this.userService.findOne({ email });
 
-  //     if (!user) {
-  //       throw new NotFoundException('User not found');
-  //     }
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
-  //     if (!(await bcrypt.compare(password, user.password))) {
-  //       throw new BadRequestException('Invalid credentials');
-  //     }
+    if (!(await bcrypt.compare(password, user.password))) {
+      throw new BadRequestException('Invalid credentials');
+    }
 
-  //     const adminLogin = request.path === '/api/admin/login';
+    const jwt = await this.jwtService.signAsync({
+      id: user.id,
+      scope,
+    });
 
-  //     if (user.is_ambassador && adminLogin) {
-  //       throw new UnauthorizedException();
-  //     }
-
-  //     const jwt = await this.jwtService.signAsync({
-  //       id: user.id,
-  //       scope: adminLogin ? 'admin' : 'ambassador',
-  //     });
-
-  //     response.cookie('jwt', jwt, { httpOnly: true });
-
-  //     return {
-  //       message: 'success',
-  //     };
-  //   }
+    return {
+      jwt,
+    };
+  }
 
   //   //@UseGuards(AuthGuard)
   //   @Get(['admin/user', 'ambassador/user'])
