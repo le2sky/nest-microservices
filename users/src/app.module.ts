@@ -5,6 +5,7 @@ import { UserModule } from './user/user.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
+      name: 'default',
       type: 'mysql',
       host: 'users_db',
       port: 3306,
