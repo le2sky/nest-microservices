@@ -15,10 +15,12 @@ import {
 } from '@nestjs/common';
 import { RegisterDto } from './dtos/register.dto';
 import * as bcrypt from 'bcryptjs';
-import { Response, Request } from 'express';
+import { Response, Request, request } from 'express';
 //import { AuthGuard } from './auth.guard';
 import { UserService } from './user.service';
 import { JwtService } from '@nestjs/jwt';
+import { TokenService } from './token.service';
+import { AuthGuard } from './auth.guard';
 
 @Controller()
 @UseInterceptors(ClassSerializerInterceptor)
@@ -26,6 +28,7 @@ export class AuthController {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private tokenService: TokenService,
   ) {}
 
   @Post('register')
@@ -48,7 +51,6 @@ export class AuthController {
     @Body('email') email: string,
     @Body('password') password: string,
     @Body('scope') scope: string,
-    @Res({ passthrough: true }) response: Response,
   ) {
     const user = await this.userService.findOne({ email });
 
@@ -65,44 +67,45 @@ export class AuthController {
       scope,
     });
 
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    await this.tokenService.save({
+      user_id: user.id,
+      token: jwt,
+      created_at: new Date(),
+      expired_at: tomorrow,
+    });
+
     return {
       jwt,
     };
   }
 
-  //   //@UseGuards(AuthGuard)
-  //   @Get(['admin/user', 'ambassador/user'])
-  //   async user(@Req() request: Request) {
-  //     const cookie = request.cookies['jwt'];
+  @UseGuards(AuthGuard)
+  @Get('user')
+  async user(@Req() request: Request) {
+    const cookie = request.cookies['jwt'];
 
-  //     const { id } = await this.jwtService.verifyAsync(cookie);
+    const { id } = await this.jwtService.verifyAsync(cookie);
 
-  //     if (request.path === '/api/admin/user') {
-  //       return this.userService.findOne({ id });
-  //     }
+    return this.userService.findOne({ id });
+  }
 
-  //     const user = await this.userService.findOne({
-  //       id,
-  //       relations: ['orders', 'orders.order_items'],
-  //     });
+  @UseGuards(AuthGuard)
+  @Post('logout')
+  async logout(@Req() request: Request) {
+    const cookie = request.cookies['jwt'];
+    const { id } = await this.jwtService.verifyAsync(cookie);
 
-  //     const { orders, password, ...data } = user;
+    await this.tokenService.delete({
+      user_id: id,
+    });
 
-  //     return {
-  //       ...data,
-  //       revenue: user.revenue,
-  //     };
-  //   }
-
-  //   //@UseGuards(AuthGuard)
-  //   @Post(['admin/logout', 'ambassador/logout'])
-  //   async logout(@Res({ passthrough: true }) response: Response) {
-  //     response.clearCookie('jwt');
-
-  //     return {
-  //       message: 'success',
-  //     };
-  //   }
+    return {
+      message: 'success',
+    };
+  }
 
   //   //@UseGuards(AuthGuard)
   //   @Put(['admin/users/info', 'ambassador/users/info'])

@@ -17,7 +17,7 @@ import { RegisterDto } from './dtos/register.dto';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
-import { Response, Request } from 'express';
+import { Response, Request, request } from 'express';
 import { AuthGuard } from './auth.guard';
 import axios from 'axios';
 
@@ -67,30 +67,53 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Get(['admin/user', 'ambassador/user'])
   async user(@Req() request: Request) {
-    const cookie = request.cookies['jwt'];
+    try {
+      const cookie = request.cookies['jwt'];
 
-    const { id } = await this.jwtService.verifyAsync(cookie);
+      const resp = await axios.get(
+        'http://host.docker.internal:8001/api/user',
+        {
+          headers: {
+            Cookie: `jwt=${cookie}`,
+          },
+        },
+      );
 
-    if (request.path === '/api/admin/user') {
-      return this.userService.findOne({ id });
+      return resp.data;
+    } catch (err) {
+      return err.response.data;
     }
+    // const user = await this.userService.findOne({
+    //   id,
+    //   relations: ['orders', 'orders.order_items'],
+    // });
 
-    const user = await this.userService.findOne({
-      id,
-      relations: ['orders', 'orders.order_items'],
-    });
+    // const { orders, password, ...data } = user;
 
-    const { orders, password, ...data } = user;
-
-    return {
-      ...data,
-      revenue: user.revenue,
-    };
+    // return {
+    //   ...data,
+    //   revenue: user.revenue,
+    // };
   }
 
   @UseGuards(AuthGuard)
   @Post(['admin/logout', 'ambassador/logout'])
-  async logout(@Res({ passthrough: true }) response: Response) {
+  async logout(
+    @Res({ passthrough: true }) response: Response,
+    @Req() request: Request,
+  ) {
+    const cookie = request.cookies['jwt'];
+
+    await axios.post(
+      'http://host.docker.internal:8001/api/logout',
+      {},
+      {
+        headers: {
+          Cookie: `jwt=${cookie}`,
+        },
+      },
+    );
+
     response.clearCookie('jwt');
 
     return {
