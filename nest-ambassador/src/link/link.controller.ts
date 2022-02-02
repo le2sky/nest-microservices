@@ -5,26 +5,21 @@ import {
   Get,
   Param,
   Post,
-  Req,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { LinkService } from './link.service';
-import { Request } from 'express';
 import { Link } from './link';
 import { Order } from '../order/order';
-import { UserService } from 'src/user/user.service';
 import { AuthGuard } from 'src/user/auth.guard';
+import { User } from 'src/user/user.decorator';
 
 @Controller()
 @UseInterceptors(ClassSerializerInterceptor)
 export class LinkController {
-  constructor(
-    private linkService: LinkService,
-    private userService: UserService,
-  ) {}
+  constructor(private linkService: LinkService) {}
 
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   @Get('admin/users/:id/links')
   async all(@Param('id') id: number) {
     return this.linkService.find({
@@ -33,11 +28,8 @@ export class LinkController {
     });
   }
 
-  //   @UseGuards(AuthGuard)
   @Post('ambassador/links')
-  async create(@Body('products') products: number[], @Req() request: Request) {
-    const user = await this.userService.get('user', request.cookies['jwt']);
-
+  async create(@Body('products') products: number[], @User() user) {
     return this.linkService.save({
       code: Math.random().toString(36).substr(6),
       user_id: user['id'],
@@ -45,11 +37,8 @@ export class LinkController {
     });
   }
 
-  //   @UseGuards(AuthGuard)
   @Get('ambassador/stats')
-  async stats(@Req() request: Request) {
-    const user = await this.userService.get('user', request.cookies['jwt']);
-
+  async stats(@User() user) {
     const links: Link[] = await this.linkService.find({
       user_id: user['id'],
       relations: ['orders'],

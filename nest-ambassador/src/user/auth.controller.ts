@@ -15,6 +15,7 @@ import { RegisterDto } from './dtos/register.dto';
 import { UserService } from './user.service';
 import { Response, Request } from 'express';
 import { AuthGuard } from './auth.guard';
+import { User } from './user.decorator';
 
 @Controller()
 @UseInterceptors(ClassSerializerInterceptor)
@@ -49,10 +50,9 @@ export class AuthController {
     };
   }
 
-  @UseGuards(AuthGuard)
   @Get(['admin/user', 'ambassador/user'])
-  async user(@Req() request: Request) {
-    return await this.userService.get('user', request.cookies['jwt']);
+  async user(@User() user) {
+    return user;
   }
 
   @UseGuards(AuthGuard)

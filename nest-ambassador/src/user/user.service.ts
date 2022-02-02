@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import axios, { Method } from 'axios';
 @Injectable()
 export class UserService {
-  baseUrl = 'http://host.docker.internal:8001/api';
-
+  //baseUrl = 'http://host.docker.internal:8001/api';
+  baseUrl = 'http://users-microservice:3000/api';
   async request(
     method: Method,
     url: string,

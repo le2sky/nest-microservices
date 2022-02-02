@@ -1,23 +1,26 @@
-import {CanActivate, ExecutionContext, Injectable} from "@nestjs/common";
-import {JwtService} from "@nestjs/jwt";
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { UserService } from './user.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-    constructor(private jwtService: JwtService) {
+  constructor(
+    private jwtService: JwtService,
+    private userService: UserService,
+  ) {}
+
+  async canActivate(context: ExecutionContext) {
+    const request = context.switchToHttp().getRequest();
+
+    try {
+      const user = await this.userService.get('user', request.cookies['jwt']);
+
+      if (!user) {
+        return false;
+      }
+      return true;
+    } catch (e) {
+      return false;
     }
-
-    async canActivate(context: ExecutionContext) {
-        const request = context.switchToHttp().getRequest();
-
-        try {
-            const jwt = request.cookies['jwt'];
-            const {scope} = await this.jwtService.verify(jwt);
-
-            const is_ambassador = request.path.toString().indexOf('api/ambassador') >= 0;
-
-            return is_ambassador && scope === 'ambassador' || !is_ambassador && scope === 'admin';
-        } catch (e) {
-            return false;
-        }
-    }
+  }
 }

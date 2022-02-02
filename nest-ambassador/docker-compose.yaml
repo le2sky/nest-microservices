@@ -8,7 +8,9 @@ services:
       - .:/app
     depends_on:
       - db
-
+    networks:
+      - monolith
+      - users
   db:
     image: mysql:5.7.22
     restart: always
@@ -26,3 +28,11 @@ services:
     image: redis
     ports:
       - 6379:6379
+    networks:
+      - monolith
+
+  networks:
+    monolith:
+    users:
+      external:
+        name: users
