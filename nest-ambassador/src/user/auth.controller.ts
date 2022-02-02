@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { RegisterDto } from './dtos/register.dto';
-import { UserService } from '../user/user.service';
+import { UserService } from './user.service';
 import { Response, Request } from 'express';
 import { AuthGuard } from './auth.guard';
 
