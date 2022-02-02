@@ -4,41 +4,29 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Get,
-  NotFoundException,
   Post,
   Put,
   Req,
   Res,
-  UnauthorizedException,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { RegisterDto } from './dtos/register.dto';
 import { UserService } from '../user/user.service';
-import * as bcrypt from 'bcryptjs';
-import { JwtService } from '@nestjs/jwt';
-import { Response, Request, request } from 'express';
+import { Response, Request } from 'express';
 import { AuthGuard } from './auth.guard';
-import axios from 'axios';
 
 @Controller()
 @UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
-  constructor(
-    private userService: UserService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private userService: UserService) {}
 
   @Post(['admin/register', 'ambassador/register'])
   async register(@Body() body: RegisterDto, @Req() request: Request) {
-    const response = await axios.post(
-      'http://host.docker.internal:8001/api/register',
-      {
-        ...body,
-        is_ambassador: request.path === '/api/ambassador/register',
-      },
-    );
-    return response.data;
+    return await this.userService.post('register', {
+      ...body,
+      is_ambassador: request.path === '/api/ambassador/register',
+    });
   }
 
   @Post(['admin/login', 'ambassador/login'])
@@ -48,16 +36,13 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Req() request: Request,
   ) {
-    const resp = await axios.post(
-      'http://host.docker.internal:8001/api/login',
-      {
-        email,
-        password,
-        scope: request.path === '/api/admin/login' ? 'admin' : 'ambassador',
-      },
-    );
+    const resp = await this.userService.post('login', {
+      email,
+      password,
+      scope: request.path === '/api/admin/login' ? 'admin' : 'ambassador',
+    });
 
-    response.cookie('jwt', resp.data['jwt'], { httpOnly: true });
+    response.cookie('jwt', resp['jwt'], { httpOnly: true });
 
     return {
       message: 'success',
@@ -67,33 +52,7 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Get(['admin/user', 'ambassador/user'])
   async user(@Req() request: Request) {
-    try {
-      const cookie = request.cookies['jwt'];
-
-      const resp = await axios.get(
-        'http://host.docker.internal:8001/api/user',
-        {
-          headers: {
-            Cookie: `jwt=${cookie}`,
-          },
-        },
-      );
-
-      return resp.data;
-    } catch (err) {
-      return err.response.data;
-    }
-    // const user = await this.userService.findOne({
-    //   id,
-    //   relations: ['orders', 'orders.order_items'],
-    // });
-
-    // const { orders, password, ...data } = user;
-
-    // return {
-    //   ...data,
-    //   revenue: user.revenue,
-    // };
+    return await this.userService.get('user', request.cookies['jwt']);
   }
 
   @UseGuards(AuthGuard)
@@ -102,18 +61,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Req() request: Request,
   ) {
-    const cookie = request.cookies['jwt'];
-
-    await axios.post(
-      'http://host.docker.internal:8001/api/logout',
-      {},
-      {
-        headers: {
-          Cookie: `jwt=${cookie}`,
-        },
-      },
-    );
-
+    await this.userService.post('logout', {}, request.cookies['jwt']);
     response.clearCookie('jwt');
 
     return {
@@ -123,23 +71,21 @@ export class AuthController {
 
   @UseGuards(AuthGuard)
   @Put(['admin/users/info', 'ambassador/users/info'])
-  async updateInfo(
+  async updateUserInfo(
     @Req() request: Request,
     @Body('first_name') first_name: string,
     @Body('last_name') last_name: string,
     @Body('email') email: string,
   ) {
-    const cookie = request.cookies['jwt'];
-
-    const { id } = await this.jwtService.verifyAsync(cookie);
-
-    await this.userService.update(id, {
-      first_name,
-      last_name,
-      email,
-    });
-
-    return this.userService.findOne({ id });
+    return await this.userService.put(
+      'users/info',
+      {
+        first_name,
+        last_name,
+        email,
+      },
+      request.cookies['jwt'],
+    );
   }
 
   @UseGuards(AuthGuard)
@@ -152,15 +98,13 @@ export class AuthController {
     if (password !== password_confirm) {
       throw new BadRequestException('Passwords do not match!');
     }
-
-    const cookie = request.cookies['jwt'];
-
-    const { id } = await this.jwtService.verifyAsync(cookie);
-
-    await this.userService.update(id, {
-      password: await bcrypt.hash(password, 12),
-    });
-
-    return this.userService.findOne({ id });
+    return await this.userService.put(
+      'users/password',
+      {
+        password,
+        password_confirm,
+      },
+      request.cookies['jwt'],
+    );
   }
 }

@@ -107,46 +107,46 @@ export class AuthController {
     };
   }
 
-  //   //@UseGuards(AuthGuard)
-  //   @Put(['admin/users/info', 'ambassador/users/info'])
-  //   async updateInfo(
-  //     @Req() request: Request,
-  //     @Body('first_name') first_name: string,
-  //     @Body('last_name') last_name: string,
-  //     @Body('email') email: string,
-  //   ) {
-  //     const cookie = request.cookies['jwt'];
+  @UseGuards(AuthGuard)
+  @Put('users/info')
+  async updateInfo(
+    @Req() request: Request,
+    @Body('first_name') first_name: string,
+    @Body('last_name') last_name: string,
+    @Body('email') email: string,
+  ) {
+    const cookie = request.cookies['jwt'];
 
-  //     const { id } = await this.jwtService.verifyAsync(cookie);
+    const { id } = await this.jwtService.verifyAsync(cookie);
 
-  //     await this.userService.update(id, {
-  //       first_name,
-  //       last_name,
-  //       email,
-  //     });
+    await this.userService.update(id, {
+      first_name,
+      last_name,
+      email,
+    });
 
-  //     return this.userService.findOne({ id });
-  //   }
+    return await this.userService.findOne({ id });
+  }
 
-  //   //@UseGuards(AuthGuard)
-  //   @Put(['admin/users/password', 'ambassador/users/password'])
-  //   async updatePassword(
-  //     @Req() request: Request,
-  //     @Body('password') password: string,
-  //     @Body('password_confirm') password_confirm: string,
-  //   ) {
-  //     if (password !== password_confirm) {
-  //       throw new BadRequestException('Passwords do not match!');
-  //     }
+  @UseGuards(AuthGuard)
+  @Put('users/password')
+  async updatePassword(
+    @Req() request: Request,
+    @Body('password') password: string,
+    @Body('password_confirm') password_confirm: string,
+  ) {
+    if (password !== password_confirm) {
+      throw new BadRequestException('Passwords do not match!');
+    }
 
-  //     const cookie = request.cookies['jwt'];
+    const cookie = request.cookies['jwt'];
 
-  //     const { id } = await this.jwtService.verifyAsync(cookie);
+    const { id } = await this.jwtService.verifyAsync(cookie);
 
-  //     await this.userService.update(id, {
-  //       password: await bcrypt.hash(password, 12),
-  //     });
+    await this.userService.update(id, {
+      password: await bcrypt.hash(password, 12),
+    });
 
-  //     return this.userService.findOne({ id });
-  //   }
+    return await this.userService.findOne({ id });
+  }
 }
