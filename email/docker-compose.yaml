@@ -2,5 +2,6 @@ version: '3.9'
 services:
   backend:
     build: .
+    container_name: email-microservice
     volumes:
       - .:/app

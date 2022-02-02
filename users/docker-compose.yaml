@@ -1,17 +1,18 @@
 version: '3.9'
 services:
-  users_backend:
+  backend:
     build: .
     container_name: users-microservice
     volumes:
       - .:/app
     depends_on:
-      - users_db
+      - db
     networks:
       - users
 
-  users_db:
+  db:
     image: mysql:8
+    container_name: users-db
     restart: always
     environment:
       MYSQL_DATABASE: users
