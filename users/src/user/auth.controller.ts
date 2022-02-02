@@ -5,6 +5,7 @@ import {
   Controller,
   Get,
   NotFoundException,
+  Param,
   Post,
   Put,
   Req,
@@ -15,12 +16,12 @@ import {
 } from '@nestjs/common';
 import { RegisterDto } from './dtos/register.dto';
 import * as bcrypt from 'bcryptjs';
-import { Response, Request, request } from 'express';
-//import { AuthGuard } from './auth.guard';
+import { Request } from 'express';
 import { UserService } from './user.service';
 import { JwtService } from '@nestjs/jwt';
 import { TokenService } from './token.service';
 import { AuthGuard } from './auth.guard';
+import { MoreThanOrEqual } from 'typeorm';
 
 @Controller()
 @UseInterceptors(ClassSerializerInterceptor)
@@ -82,12 +83,25 @@ export class AuthController {
     };
   }
 
-  @UseGuards(AuthGuard)
-  @Get('user')
-  async user(@Req() request: Request) {
-    const cookie = request.cookies['jwt'];
+  @Get('user/:scope')
+  async user(@Req() request: Request, @Param('scope') requestScope: string) {
+    const { id, scope } = await this.jwtService.verify(request.cookies['jwt']);
 
-    const { id } = await this.jwtService.verifyAsync(cookie);
+    const userToken = await this.tokenService.findOne({
+      user_id: id,
+      expired_at: MoreThanOrEqual(new Date()),
+    });
+
+    if (!userToken) {
+      throw new UnauthorizedException();
+    }
+
+    if (
+      (requestScope === 'admin' && scope === 'ambassador') ||
+      (requestScope === 'ambassador' && scope === 'admin')
+    ) {
+      throw new UnauthorizedException();
+    }
 
     return this.userService.findOne({ id });
   }

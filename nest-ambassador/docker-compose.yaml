@@ -23,7 +23,8 @@ services:
       - .dbdata:/var/lib/mysql
     ports:
       - 33066:3306
-
+    networks:
+      - monolith
   redis:
     image: redis
     ports:
@@ -31,8 +32,8 @@ services:
     networks:
       - monolith
 
-  networks:
-    monolith:
-    users:
-      external:
-        name: users
+networks:
+  monolith:
+  users:
+    external:
+      name: users

@@ -21,6 +21,6 @@ services:
     networks:
       - users
 
-  networks:
-    users:
-      name: users
+networks:
+  users:
+    name: users

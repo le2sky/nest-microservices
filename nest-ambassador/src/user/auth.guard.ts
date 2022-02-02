@@ -13,7 +13,15 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
 
     try {
-      const user = await this.userService.get('user', request.cookies['jwt']);
+      const is_ambassador =
+        request.path.toString().indexOf('api/ambassador') >= 0;
+
+      const scope = request.path === is_ambassador ? 'ambassador' : 'admin';
+
+      const user = await this.userService.get(
+        `user/${scope}`,
+        request.cookies['jwt'],
+      );
 
       if (!user) {
         return false;
