@@ -18,6 +18,9 @@ export class UserService {
   }
 
   async findOne(options) {
-    return await this.userRepository.findOne(options)
+    return await this.userRepository.findOne(options);
+  }
+  async update(id: number, options) {
+    return await this.userRepository.update(id, options);
   }
 }

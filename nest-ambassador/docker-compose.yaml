@@ -2,15 +2,19 @@ version: '3.9'
 services:
   backend:
     build: .
+    container_name: nest-ambassador-backend
     ports:
       - 8000:3000
     volumes:
       - .:/app
     depends_on:
       - db
-
+    networks:
+      - monolith
+      - users
   db:
     image: mysql:5.7.22
+    container_name: nest-ambassador-db
     restart: always
     environment:
       MYSQL_DATABASE: ambassador
@@ -21,8 +25,19 @@ services:
       - .dbdata:/var/lib/mysql
     ports:
       - 33066:3306
-
+    networks:
+      - monolith
   redis:
     image: redis
+    container_name: nest-ambassador-redis
     ports:
       - 6379:6379
+    networks:
+      - monolith
+
+networks:
+  monolith:
+    name: monolith
+  users:
+    external:
+      name: users

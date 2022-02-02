@@ -17,6 +17,7 @@ import {
   ClientsModuleAsyncOptions,
   Transport,
 } from '@nestjs/microservices';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import {
         },
       },
     ] as ClientsModuleAsyncOptions),
+    UserModule,
   ],
   controllers: [OrderController],
   providers: [OrderService, OrderItemService, OrderListener],

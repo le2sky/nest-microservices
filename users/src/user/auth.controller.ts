@@ -5,6 +5,7 @@ import {
   Controller,
   Get,
   NotFoundException,
+  Param,
   Post,
   Put,
   Req,
@@ -15,10 +16,12 @@ import {
 } from '@nestjs/common';
 import { RegisterDto } from './dtos/register.dto';
 import * as bcrypt from 'bcryptjs';
-import { Response, Request } from 'express';
-//import { AuthGuard } from './auth.guard';
+import { Request } from 'express';
 import { UserService } from './user.service';
 import { JwtService } from '@nestjs/jwt';
+import { TokenService } from './token.service';
+import { AuthGuard } from './auth.guard';
+import { MoreThanOrEqual } from 'typeorm';
 
 @Controller()
 @UseInterceptors(ClassSerializerInterceptor)
@@ -26,6 +29,7 @@ export class AuthController {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private tokenService: TokenService,
   ) {}
 
   @Post('register')
@@ -48,7 +52,6 @@ export class AuthController {
     @Body('email') email: string,
     @Body('password') password: string,
     @Body('scope') scope: string,
-    @Res({ passthrough: true }) response: Response,
   ) {
     const user = await this.userService.findOne({ email });
 
@@ -65,85 +68,99 @@ export class AuthController {
       scope,
     });
 
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    await this.tokenService.save({
+      user_id: user.id,
+      token: jwt,
+      created_at: new Date(),
+      expired_at: tomorrow,
+    });
+
     return {
       jwt,
     };
   }
 
-  //   //@UseGuards(AuthGuard)
-  //   @Get(['admin/user', 'ambassador/user'])
-  //   async user(@Req() request: Request) {
-  //     const cookie = request.cookies['jwt'];
+  @Get('user/:scope')
+  async user(@Req() request: Request, @Param('scope') requestScope: string) {
+    const { id, scope } = await this.jwtService.verify(request.cookies['jwt']);
 
-  //     const { id } = await this.jwtService.verifyAsync(cookie);
+    const userToken = await this.tokenService.findOne({
+      user_id: id,
+      expired_at: MoreThanOrEqual(new Date()),
+    });
 
-  //     if (request.path === '/api/admin/user') {
-  //       return this.userService.findOne({ id });
-  //     }
+    if (!userToken) {
+      throw new UnauthorizedException();
+    }
 
-  //     const user = await this.userService.findOne({
-  //       id,
-  //       relations: ['orders', 'orders.order_items'],
-  //     });
+    if (
+      (requestScope === 'admin' && scope === 'ambassador') ||
+      (requestScope === 'ambassador' && scope === 'admin')
+    ) {
+      throw new UnauthorizedException();
+    }
 
-  //     const { orders, password, ...data } = user;
+    return this.userService.findOne({ id });
+  }
 
-  //     return {
-  //       ...data,
-  //       revenue: user.revenue,
-  //     };
-  //   }
+  @UseGuards(AuthGuard)
+  @Post('logout')
+  async logout(@Req() request: Request) {
+    const cookie = request.cookies['jwt'];
+    const { id } = await this.jwtService.verifyAsync(cookie);
 
-  //   //@UseGuards(AuthGuard)
-  //   @Post(['admin/logout', 'ambassador/logout'])
-  //   async logout(@Res({ passthrough: true }) response: Response) {
-  //     response.clearCookie('jwt');
+    await this.tokenService.delete({
+      user_id: id,
+    });
 
-  //     return {
-  //       message: 'success',
-  //     };
-  //   }
+    return {
+      message: 'success',
+    };
+  }
 
-  //   //@UseGuards(AuthGuard)
-  //   @Put(['admin/users/info', 'ambassador/users/info'])
-  //   async updateInfo(
-  //     @Req() request: Request,
-  //     @Body('first_name') first_name: string,
-  //     @Body('last_name') last_name: string,
-  //     @Body('email') email: string,
-  //   ) {
-  //     const cookie = request.cookies['jwt'];
+  @UseGuards(AuthGuard)
+  @Put('users/info')
+  async updateInfo(
+    @Req() request: Request,
+    @Body('first_name') first_name: string,
+    @Body('last_name') last_name: string,
+    @Body('email') email: string,
+  ) {
+    const cookie = request.cookies['jwt'];
 
-  //     const { id } = await this.jwtService.verifyAsync(cookie);
+    const { id } = await this.jwtService.verifyAsync(cookie);
 
-  //     await this.userService.update(id, {
-  //       first_name,
-  //       last_name,
-  //       email,
-  //     });
+    await this.userService.update(id, {
+      first_name,
+      last_name,
+      email,
+    });
 
-  //     return this.userService.findOne({ id });
-  //   }
+    return await this.userService.findOne({ id });
+  }
 
-  //   //@UseGuards(AuthGuard)
-  //   @Put(['admin/users/password', 'ambassador/users/password'])
-  //   async updatePassword(
-  //     @Req() request: Request,
-  //     @Body('password') password: string,
-  //     @Body('password_confirm') password_confirm: string,
-  //   ) {
-  //     if (password !== password_confirm) {
-  //       throw new BadRequestException('Passwords do not match!');
-  //     }
+  @UseGuards(AuthGuard)
+  @Put('users/password')
+  async updatePassword(
+    @Req() request: Request,
+    @Body('password') password: string,
+    @Body('password_confirm') password_confirm: string,
+  ) {
+    if (password !== password_confirm) {
+      throw new BadRequestException('Passwords do not match!');
+    }
 
-  //     const cookie = request.cookies['jwt'];
+    const cookie = request.cookies['jwt'];
 
-  //     const { id } = await this.jwtService.verifyAsync(cookie);
+    const { id } = await this.jwtService.verifyAsync(cookie);
 
-  //     await this.userService.update(id, {
-  //       password: await bcrypt.hash(password, 12),
-  //     });
+    await this.userService.update(id, {
+      password: await bcrypt.hash(password, 12),
+    });
 
-  //     return this.userService.findOne({ id });
-  //   }
+    return await this.userService.findOne({ id });
+  }
 }
