@@ -1,0 +1,32 @@
+version: '3.9'
+services:
+  backend:
+    build: .
+    container_name: admin-microservice
+    ports:
+      - 8001:3000
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    networks:
+      - admin
+      - users
+  db:
+    image: mysql:8
+    container_name: admin-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: admin
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - .dbdata:/var/lib/mysql
+    networks:
+      - admin
+
+networks:
+  admin:
+    name: admin
+  users:
+    external:
+      name: users
