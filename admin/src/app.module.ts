@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserModule } from './user/user.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -12,6 +13,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       autoLoadEntities: true,
       synchronize: true,
     }),
+    UserModule,
   ],
 })
 export class AppModule {}
