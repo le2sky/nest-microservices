@@ -5,7 +5,6 @@ import {
   Get,
   Param,
   Post,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { LinkService } from './link.service';
@@ -18,15 +17,6 @@ import { User } from 'src/user/user.decorator';
 @UseInterceptors(ClassSerializerInterceptor)
 export class LinkController {
   constructor(private linkService: LinkService) {}
-
-  @UseGuards(AuthGuard)
-  @Get('admin/users/:id/links')
-  async all(@Param('id') id: number) {
-    return this.linkService.find({
-      user: id,
-      relations: ['orders'],
-    });
-  }
 
   @Post('ambassador/links')
   async create(@Body('products') products: number[], @User() user) {
