@@ -1,13 +1,9 @@
 import {
   BadRequestException,
   Body,
-  ClassSerializerInterceptor,
   Controller,
-  Get,
   NotFoundException,
   Post,
-  UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dtos/create-order.dto';
@@ -39,15 +35,6 @@ export class OrderController {
     private eventEmitter: EventEmitter2,
     private userService: UserService,
   ) {}
-
-  @UseGuards(AuthGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
-  @Get('admin/orders')
-  all() {
-    return this.orderService.find({
-      relations: ['order_items'],
-    });
-  }
 
   @Post('checkout/orders')
   async create(@Body() body: CreateOrderDto) {
