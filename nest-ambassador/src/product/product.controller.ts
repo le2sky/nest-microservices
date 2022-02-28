@@ -1,73 +1,25 @@
 import {
-  Body,
   CACHE_MANAGER,
   CacheInterceptor,
   CacheKey,
   CacheTTL,
   Controller,
-  Delete,
   Get,
   Inject,
-  Param,
-  Post,
-  Put,
   Req,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { ProductCreateDto } from './dtos/product-create.dto';
 import { Cache } from 'cache-manager';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Request } from 'express';
 import { Product } from './product';
-import { AuthGuard } from 'src/user/auth.guard';
 
 @Controller()
 export class ProductController {
   constructor(
     private readonly productService: ProductService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private eventEmitter: EventEmitter2,
   ) {}
-
-  @UseGuards(AuthGuard)
-  @Get('admin/products')
-  async all() {
-    return this.productService.find();
-  }
-
-  @UseGuards(AuthGuard)
-  @Post('admin/products')
-  async create(@Body() body: ProductCreateDto) {
-    const product = await this.productService.save(body);
-    this.eventEmitter.emit('product_updated');
-    return product;
-  }
-
-  @UseGuards(AuthGuard)
-  @Get('admin/products/:id')
-  async get(@Param('id') id: number) {
-    return this.productService.findOne({ id });
-  }
-
-  @UseGuards(AuthGuard)
-  @Put('admin/products/:id')
-  async update(@Param('id') id: number, @Body() body: ProductCreateDto) {
-    await this.productService.update(id, body);
-
-    this.eventEmitter.emit('product_updated');
-
-    return this.productService.findOne({ id });
-  }
-
-  @UseGuards(AuthGuard)
-  @Delete('admin/products/:id')
-  async delete(@Param('id') id: number) {
-    const response = await this.productService.delete(id);
-    this.eventEmitter.emit('product_updated');
-    return response;
-  }
 
   @CacheKey('products_frontend')
   @CacheTTL(1800)

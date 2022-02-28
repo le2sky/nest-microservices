@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user';
-import { Response } from 'express';
 import { AuthGuard } from './auth.guard';
 
 @UseGuards(AuthGuard)
