@@ -21,12 +21,6 @@ export class UserController {
     private redisService: RedisService,
   ) {}
 
-  @Get('admin/ambassadors')
-  async ambassadors() {
-    const users: User[] = await this.userService.get('users');
-    return users.filter((u) => u.is_ambassador);
-  }
-
   @Get('ambassador/rankings')
   async rankings(@Res() response: Response) {
     const client = this.redisService.getClient();

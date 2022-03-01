@@ -7,7 +7,7 @@ export class AppController {
   constructor(private mailerService: MailerService) {}
 
   // 특정 토픽을 구독한다.
-  @MessagePattern('default')
+  @MessagePattern('email_topic')
   async orderComplated(@Payload() message: KafkaMessage) {
     const order: any = message.value;
 
