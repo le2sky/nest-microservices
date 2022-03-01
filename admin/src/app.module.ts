@@ -5,6 +5,7 @@ import { OrderModule } from './order/order.module';
 import { ProductModule } from './product/product.module';
 import { UserModule } from './user/user.module';
 import { KafkaModule } from './kafka/kafka.module';
+import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -16,6 +17,9 @@ import { KafkaModule } from './kafka/kafka.module';
       database: 'admin',
       autoLoadEntities: true,
       synchronize: true,
+    }),
+    ConfigModule.forRoot({
+      isGlobal: true,
     }),
     UserModule,
     ProductModule,
