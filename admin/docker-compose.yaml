@@ -2,6 +2,7 @@ version: '3.9'
 services:
   backend:
     build: .
+    command: 'npm run start:dev'
     container_name: admin-microservice
     ports:
       - 8001:3000
@@ -21,6 +22,15 @@ services:
       MYSQL_ROOT_PASSWORD: root
     volumes:
       - .dbdata:/var/lib/mysql
+    networks:
+      - admin
+
+  consumer:
+    build: .
+    command: 'npm run consume'
+    container_name: admin-consumer
+    depends_on:
+      - db
     networks:
       - admin
 
