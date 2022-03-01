@@ -11,10 +11,14 @@ import {
 import { ProductService } from './product.service';
 import { ProductCreateDto } from './dtos/product-create.dto';
 import { AuthGuard } from '../user/auth.guard';
+import { KafkaService } from 'src/kafka/kafka.service';
 
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private kafkaService: KafkaService,
+  ) {}
 
   @UseGuards(AuthGuard)
   @Get()
@@ -26,7 +30,7 @@ export class ProductController {
   @Post()
   async create(@Body() body: ProductCreateDto) {
     const product = await this.productService.save(body);
-    // this.eventEmitter.emit('product_updated');
+    await this.kafkaService.emit('ambassador_topic', 'productCreated', product);
     return product;
   }
 
@@ -40,17 +44,19 @@ export class ProductController {
   @Put(':id')
   async update(@Param('id') id: number, @Body() body: ProductCreateDto) {
     await this.productService.update(id, body);
+    const product = await this.productService.findOne({ id });
+    await this.kafkaService.emit('ambassador_topic', 'productUpdated', product);
 
-    // this.eventEmitter.emit('product_updated');
-
-    return this.productService.findOne({ id });
+    return product;
   }
 
   @UseGuards(AuthGuard)
   @Delete(':id')
   async delete(@Param('id') id: number) {
     const response = await this.productService.delete(id);
-    // this.eventEmitter.emit('product_updated');
+
+    await this.kafkaService.emit('ambassador_topic', 'productDeleted', id);
+
     return response;
   }
 }

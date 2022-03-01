@@ -4,6 +4,7 @@ import { LinkModule } from './link/link.module';
 import { OrderModule } from './order/order.module';
 import { ProductModule } from './product/product.module';
 import { UserModule } from './user/user.module';
+import { KafkaModule } from './kafka/kafka.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -20,6 +21,7 @@ import { UserModule } from './user/user.module';
     ProductModule,
     OrderModule,
     LinkModule,
+    KafkaModule,
   ],
 })
 export class AppModule {}
