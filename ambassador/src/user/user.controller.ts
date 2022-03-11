@@ -6,7 +6,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { RedisService } from 'src/shared/redis.service';
+import { RedisService } from '../shared/redis.service';
 import { Response } from 'express';
 @Controller()
 @UseInterceptors(ClassSerializerInterceptor)

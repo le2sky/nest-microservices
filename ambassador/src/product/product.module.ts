@@ -4,7 +4,7 @@ import { ProductService } from './product.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Product } from './product';
 import { UserModule } from '../user/user.module';
-import { SharedModule } from 'src/shared/shared.module';
+import { SharedModule } from '../shared/shared.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Product]), UserModule, SharedModule],
