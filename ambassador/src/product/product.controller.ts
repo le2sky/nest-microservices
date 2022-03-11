@@ -1,8 +1,8 @@
 import {
-  CACHE_MANAGER,
   CacheInterceptor,
   CacheKey,
   CacheTTL,
+  CACHE_MANAGER,
   Controller,
   Get,
   Inject,
@@ -10,26 +10,25 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { Cache } from 'cache-manager';
 import { Request } from 'express';
 import { Product } from './product';
+import { Cache } from 'cache-manager';
 
-@Controller()
+@Controller('products')
 export class ProductController {
   constructor(
     private readonly productService: ProductService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
-
   @CacheKey('products_frontend')
   @CacheTTL(1800)
   @UseInterceptors(CacheInterceptor)
-  @Get('ambassador/products/frontend')
+  @Get('frontend')
   async frontend() {
     return this.productService.find();
   }
 
-  @Get('ambassador/products/backend')
+  @Get('backend')
   async backend(@Req() request: Request) {
     let products = await this.cacheManager.get<Product[]>('products_backend');
 
