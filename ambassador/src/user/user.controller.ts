@@ -6,22 +6,13 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { UserService } from './user.service';
-import { User } from './user';
 import { RedisService } from '../shared/redis.service';
 import { Response } from 'express';
-import { AuthGuard } from './auth.guard';
-
-@UseGuards(AuthGuard)
 @Controller()
 @UseInterceptors(ClassSerializerInterceptor)
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-    private redisService: RedisService,
-  ) {}
-
-  @Get('ambassador/rankings')
+  constructor(private readonly redisService: RedisService) {}
+  @Get('rankings')
   async rankings(@Res() response: Response) {
     const client = this.redisService.getClient();
 

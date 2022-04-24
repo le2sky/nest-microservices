@@ -2,42 +2,38 @@ version: '3.9'
 services:
   backend:
     build: .
-    container_name: nest-ambassador-backend
+    container_name: ambassador-microservice
     ports:
-      - 8000:3000
+      - 8002:3000
     volumes:
       - .:/app
     depends_on:
       - db
     networks:
-      - monolith
+      - ambassador
       - users
   db:
-    image: mysql:5.7.22
-    container_name: nest-ambassador-db
+    image: mysql:8
+    container_name: ambassador-db
     restart: always
     environment:
       MYSQL_DATABASE: ambassador
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
       MYSQL_ROOT_PASSWORD: root
     volumes:
       - .dbdata:/var/lib/mysql
-    ports:
-      - 33066:3306
     networks:
-      - monolith
+      - ambassador
   redis:
     image: redis
-    container_name: nest-ambassador-redis
-    # ports:
-    #   - 6379:6379
+    container_name: ambassador-redis
+    ports:
+      - 6379:6379
     networks:
-      - monolith
+      - ambassador
 
 networks:
-  monolith:
-    name: monolith
+  ambassador:
+    name: ambassador
   users:
     external:
       name: users
