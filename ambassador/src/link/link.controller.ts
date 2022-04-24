@@ -9,7 +9,6 @@ import {
 import { LinkService } from './link.service';
 import { User } from '../user/user.decorator';
 import { Link } from './link';
-import { Order } from 'src/order/order';
 
 @Controller()
 @UseInterceptors(ClassSerializerInterceptor)
@@ -25,21 +24,17 @@ export class LinkController {
     });
   }
 
-  // @Get('stats')
-  // async stats(@User() user) {
-  //   const links: Link[] = await this.linkService.find({
-  //     user_id: user['id'],
-  //     relations: ['orders'],
-  //   });
+  @Get('stats')
+  async stats(@User() user) {
+    const links: Link[] = await this.linkService.find({
+      user_id: user['id'],
+      relations: ['orders'],
+    });
 
-  //   return links.map((link) => {
-  //     const completedOrders: Order[] = link.orders.filter((o) => o.complete);
-
-  //     return {
-  //       code: link.code,
-  //       count: completedOrders.length,
-  //       revenue: completedOrders.reduce((s, o) => s + o.ambassador_revenue, 0),
-  //     };
-  //   });
-  // }
+    return links.map((link) => ({
+      code: link.code,
+      count: link.orders.length,
+      revenue: link.orders.reduce((s, o) => s + o.total, 0),
+    }));
+  }
 }

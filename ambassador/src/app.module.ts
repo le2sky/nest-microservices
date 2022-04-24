@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LinkModule } from './link/link.module';
 import { OrderModule } from './order/order.module';
@@ -18,9 +18,9 @@ import { UserModule } from './user/user.module';
       synchronize: true,
     }),
     ProductModule,
-    UserModule,
     LinkModule,
-    OrderModule,
+    forwardRef(() => UserModule),
+    forwardRef(() => OrderModule),
   ],
 })
 export class AppModule {}

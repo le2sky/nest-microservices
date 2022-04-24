@@ -16,11 +16,15 @@ import { UserService } from './user.service';
 import { Response, Request } from 'express';
 import { AuthGuard } from './auth.guard';
 import { User } from './user.decorator';
+import { OrderService } from '../order/order.service';
 
 @Controller()
 @UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private orderService: OrderService,
+  ) {}
 
   @Post('register')
   async register(@Body() body: RegisterDto, @Req() request: Request) {
@@ -52,6 +56,10 @@ export class AuthController {
 
   @Get('user')
   async user(@User() user) {
+    const orders = await this.orderService.find({
+      user_id: user['id'],
+    });
+    user['revenue'] = orders.reduce((s, o) => s + o.total, 0);
     return user;
   }
 

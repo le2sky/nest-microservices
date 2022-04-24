@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from './order';
@@ -9,10 +9,11 @@ import { UserModule } from '../user/user.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order]),
-    LinkModule,
+    forwardRef(() => LinkModule),
     ProductModule,
-    UserModule,
+    forwardRef(() => UserModule),
   ],
   providers: [OrderService],
+  exports: [OrderService],
 })
 export class OrderModule {}
